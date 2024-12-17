@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Query System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .response-box {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        hr {
+            border-top: 1px solid #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">PDF Query System</h1>
+
+        <!-- Query Section -->
+        <div class="mb-4">
+            <h5>Ask a Question</h5>
+            <form id="query-form">
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="query" name="query" placeholder="Enter your query" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Ask</button>
+            </form>
+        </div>
+
+        <!-- Response Section -->
+        <div id="response" class="response-box">
+            <h5>Response:</h5>
+            <div id="response-content"></div>
+        </div>
+    </div>
+    
+
+    <script>
+        // Handle Query Form Submission
+        document.getElementById("query-form").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            const query = document.getElementById("query").value.trim(); // Trim extra spaces
+            const responseDiv = document.getElementById("response-content");
+
+            // Display loading message
+            responseDiv.innerHTML = "Processing your query...";
+
+            try {
+                const response = await fetch("/ask", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: new URLSearchParams({ query })
+                });
+
+                const data = await response.json();
+                if (data.response) {
+                    // Clean and sanitize response
+                    const sanitizedResponse = data.response
+                        .replace(/([a-zA-Z])\1+/g, '$1')  // Remove repeated characters
+                        .replace(/(?:\r\n|\r|\n)/g, '<br>'); // Replace newlines with <br>
+                    responseDiv.innerHTML = sanitizedResponse;
+                } else {
+                    responseDiv.innerHTML = `<p class="text-danger">${data.error || "No response received."}</p>`;
+                }
+            } catch (error) {
+                responseDiv.innerHTML = `<p class="text-danger">An error occurred: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
